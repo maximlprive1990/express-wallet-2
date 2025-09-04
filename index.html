@@ -3,128 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ruble Mining & Power Cash</title>
+<title>💰 RUB Mining & Power Cash 💰</title>
 <style>
-  body { background:#0d0d0d; color:#eee; font-family:Arial, sans-serif; text-align:center; }
-  h1,h2,h3{color:#ffdd33;}
-  button { padding:10px 20px; margin:5px; cursor:pointer; background:#222; color:#fff; border:none; border-radius:5px; }
-  input { padding:5px; border-radius:3px; border:none; margin:5px; }
-  .hidden { display:none; }
-  .section { border:1px solid #444; padding:15px; margin:10px; border-radius:10px; }
+body { background:#0d0d0d; color:#eee; font-family:Consolas, monospace; text-align:center; margin:0; padding:0; }
+h1,h2,h3{color:#ffdd33;}
+button { padding:10px 20px; margin:5px; cursor:pointer; background:#222; color:#fff; border:none; border-radius:5px; }
+input { padding:5px; border-radius:3px; border:none; margin:5px; width:200px; }
+.section { border:1px solid #444; padding:15px; margin:10px; border-radius:10px; max-width:600px; margin-left:auto; margin-right:auto; }
+.logPanel { background:#111; height:200px; overflow:auto; padding:5px; border-radius:5px; border:1px solid #444; text-align:left; font-size:12px; }
+.minerStats { display:flex; justify-content:space-around; margin:10px 0; }
+.miner { border:1px solid #444; padding:10px; border-radius:5px; width:120px; }
 </style>
 </head>
 <body>
-<h1>💰 Ruble Mining & Power Cash 💰</h1>
+<h1>💰 RUB Mining & Power Cash 💰</h1>
 
 <div class="section">
-  <h2>💳 Dépôt simulé</h2>
-  <input type="number" id="depositInput" placeholder="Montant RUB" min="1">
-  <button onclick="makeDeposit()">Déposer</button>
-  <p id="depositLog"></p>
+<h2>📌 Instructions de dépôt</h2>
+<p>Pour miner et pouvoir retirer vos RUB, effectuez un dépôt réel :</p>
+<ul>
+<li>Payeer: <b>P1112145219</b></li>
+<li>Ou dépôt direct via FaucetPay: <b>maximlprive90@gmail.com</b></li>
+</ul>
+<p>Ensuite, saisissez votre <b>IDTX</b> pour vérification:</p>
+<input type="text" id="idtxInput" placeholder="IDTX">
+<button onclick="verifyDeposit()">Vérifier</button>
+<p id="verifyLog"></p>
 </div>
 
 <div class="section">
-  <h2>⏳ Mining en cours</h2>
-  <p>RUB accumulés: <span id="rubBalance">0</span> RUB</p>
-  <p>Mining horaire: <span id="rubRate">0</span> RUB/h</p>
+<h2>⛏️ Minage RUB</h2>
+<div class="minerStats" id="minersContainer">
+<!-- Mineurs ajoutés ici -->
+</div>
+<p>Total RUB minés: <span id="totalRub">0</span></p>
+<p>Power Cash disponible: <span id="powerCash">0</span></p>
+<button id="claimPower" class="hidden" onclick="claimPower()">Réclamer Power Cash</button>
 </div>
 
 <div class="section">
-  <h2>🪙 Power Cash</h2>
-  <p id="powerCashInfo">Vous n'avez pas encore assez de RUB pour débloquer le Power Cash.</p>
-  <button id="claimPower" class="hidden" onclick="claimPowerCash()">Réclamer Power Cash</button>
-  <p id="powerCashBalance">Power Cash: 0</p>
-</div>
-
-<div class="section">
-  <h2>📢 Liens sponsorisés</h2>
-  <input type="text" id="linkInput" placeholder="Lien à poster">
-  <input type="number" id="linkCost" placeholder="RUB à dépenser" min="1">
-  <button onclick="postLink()">Poster le lien</button>
-  <p id="linkLog"></p>
-  <h3>Vos liens :</h3>
-  <ul id="linksList"></ul>
+<h2>📜 Logs RUB Mining</h2>
+<div class="logPanel" id="logPanel"></div>
 </div>
 
 <script>
-// Initialisation
-let data = JSON.parse(localStorage.getItem('rubleData')) || {
-  rubBalance:0,
-  rubRate:0,
+// Initialisation mineurs
+let miners = [
+  {name:'Miner 1', hashRate: Math.random()*50+50}, 
+  {name:'Miner 2', hashRate: Math.random()*50+50}, 
+  {name:'Miner 3', hashRate: Math.random()*50+50}
+];
+
+let data = JSON.parse(localStorage.getItem('rubData')) || {
+  totalRub:0,
   powerCash:0,
-  powerClaimed:false,
-  links: []
+  verified:false,
+  logs:[]
 };
 
-// Mise à jour affichage
-function updateDisplay(){
-  document.getElementById('rubBalance').innerText = data.rubBalance.toFixed(2);
-  document.getElementById('rubRate').innerText = data.rubRate.toFixed(2);
-  document.getElementById('powerCashBalance').innerText = "Power Cash: " + data.powerCash.toFixed(2);
-  if(data.rubBalance>=1){
-    document.getElementById('powerCashInfo').innerText = "Vous pouvez réclamer votre Power Cash !";
-    document.getElementById('claimPower').classList.remove('hidden');
-  }else{
-    document.getElementById('powerCashInfo').innerText = "Vous n'avez pas encore assez de RUB pour débloquer le Power Cash.";
-    document.getElementById('claimPower').classList.add('hidden');
-  }
-  let list = document.getElementById('linksList');
-  list.innerHTML = '';
-  data.links.forEach((l,i)=>{
-    let li = document.createElement('li');
-    li.innerText = l.link + " (Vues restantes: " + l.views + ")";
-    list.appendChild(li);
+// Affichage mineurs
+function updateMiners(){
+  let container = document.getElementById('minersContainer');
+  container.innerHTML='';
+  miners.forEach((m)=>{
+    let div = document.createElement('div');
+    div.className='miner';
+    div.innerHTML=`<b>${m.name}</b><br>${m.hashRate.toFixed(2)} GH/s`;
+    container.appendChild(div);
   });
-  localStorage.setItem('rubleData', JSON.stringify(data));
 }
 
-// Dépôt simulé
-function makeDeposit(){
-  let dep = parseFloat(document.getElementById('depositInput').value);
-  if(dep && dep>0){
-    data.rubRate += dep/1000; // 1000 RUB = 1 RUB/h
-    data.rubBalance += dep/1000; // Simule gain immédiat pour test
-    document.getElementById('depositLog').innerText = "Dépôt simulé: " + dep + " RUB.";
-    updateDisplay();
+// Logs
+function addLog(msg){
+  data.logs.push(msg);
+  if(data.logs.length>100) data.logs.shift();
+  let panel = document.getElementById('logPanel');
+  panel.innerHTML = data.logs.join('<br>');
+  panel.scrollTop = panel.scrollHeight;
+  localStorage.setItem('rubData', JSON.stringify(data));
+}
+
+// Mining simulation
+function mineStep(){
+  if(!data.verified) return; // ne mine que si IDTX vérifié
+  miners.forEach((m)=>{
+    let gain = m.hashRate/1000*(Math.random()*0.05+0.05); // gain en RUB
+    data.totalRub += gain;
+    if(Math.random()<0.02) addLog(`[${m.name}] Hash rejeté`);
+    else addLog(`[${m.name}] Hash accepté: +${gain.toFixed(2)} RUB`);
+  });
+  document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
+  if(data.totalRub>=1){
+    document.getElementById('claimPower').classList.remove('hidden');
+    document.getElementById('powerCash').innerText = data.powerCash.toFixed(2);
+  }
+  localStorage.setItem('rubData', JSON.stringify(data));
+}
+
+// Vérification dépôt IDTX
+function verifyDeposit(){
+  let idtx = document.getElementById('idtxInput').value.trim();
+  if(idtx.length>0){
+    data.verified = true;
+    document.getElementById('verifyLog').innerText = "IDTX vérifié. Minage activé !";
+    localStorage.setItem('rubData', JSON.stringify(data));
+  }else{
+    alert("Veuillez saisir un IDTX valide.");
   }
 }
-
-// Mining automatique toutes les minutes
-setInterval(()=>{
-  data.rubBalance += data.rubRate/60; // par minute
-  updateDisplay();
-},60000);
 
 // Réclamer Power Cash
-function claimPowerCash(){
-  let cash = Math.floor(data.rubBalance);
-  if(cash>=1){
-    data.powerCash += cash;
-    data.rubBalance -= cash;
-    updateDisplay();
-  }else{
-    alert("Vous n'avez pas assez de RUB à convertir en Power Cash.");
-  }
+function claimPower(){
+  let claim = Math.floor(data.totalRub);
+  data.powerCash += claim;
+  data.totalRub -= claim;
+  document.getElementById('powerCash').innerText = data.powerCash.toFixed(2);
+  document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
+  document.getElementById('claimPower').classList.add('hidden');
+  addLog(`Power Cash réclamé: ${claim}`);
+  localStorage.setItem('rubData', JSON.stringify(data));
 }
 
-// Poster un lien sponsorisé
-function postLink(){
-  let link = document.getElementById('linkInput').value;
-  let cost = parseFloat(document.getElementById('linkCost').value);
-  if(link && cost>0 && data.rubBalance>=cost){
-    let views = Math.floor(cost*3.5); // 100 RUB = 350 vues
-    data.rubBalance -= cost;
-    data.links.push({link:link, views:views});
-    document.getElementById('linkLog').innerText = "Lien posté pour " + cost + " RUB ("+views+" vues).";
-    document.getElementById('linkInput').value = '';
-    document.getElementById('linkCost').value = '';
-    updateDisplay();
-  }else{
-    alert("RUB insuffisant pour poster ce lien ou informations manquantes.");
-  }
-}
-
-updateDisplay();
+// Intervalle mining
+setInterval(mineStep,3000); // toutes les 3 secondes
+updateMiners();
+document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
+document.getElementById('powerCash').innerText = data.powerCash.toFixed(2);
 </script>
 </body>
 </html>
+
