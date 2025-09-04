@@ -9,145 +9,13 @@ body { background:#0d0d0d; color:#eee; font-family:Consolas, monospace; text-ali
 h1,h2,h3{color:#ffdd33;}
 button { padding:10px 20px; margin:5px; cursor:pointer; background:#222; color:#fff; border:none; border-radius:5px; }
 input { padding:5px; border-radius:3px; border:none; margin:5px; width:200px; }
-.section { border:1px solid #444; padding:15px; margin:10px; border-radius:10px; max-width:600px; margin-left:auto; margin-right:auto; }
-.logPanel { background:#111; height:200px; overflow:auto; padding:5px; border-radius:5px; border:1px solid #444; text-align:left; font-size:12px; }
-.minerStats { display:flex; justify-content:space-around; margin:10px 0; }
-.miner { border:1px solid #444; padding:10px; border-radius:5px; width:120px; }
-</style>
-</head>
-<body>
-<h1>💰 RUB Mining & Power Cash 💰</h1>
-
-<div class="section">
-<h2>📌 Instructions de dépôt</h2>
-<p>Pour miner et pouvoir retirer vos RUB, effectuez un dépôt réel :</p>
-<ul>
-<li>Payeer: <b>P1112145219</b></li>
-<li>Ou dépôt direct via FaucetPay: <b>maximlprive90@gmail.com</b></li>
-</ul>
-<p>Ensuite, saisissez votre <b>IDTX</b> pour vérification:</p>
-<input type="text" id="idtxInput" placeholder="IDTX">
-<button onclick="verifyDeposit()">Vérifier</button>
-<p id="verifyLog"></p>
-</div>
-
-<div class="section">
-<h2>⛏️ Minage RUB</h2>
-<div class="minerStats" id="minersContainer">
-<!-- Mineurs ajoutés ici -->
-</div>
-<p>Total RUB minés: <span id="totalRub">0</span></p>
-<p>Power Cash disponible: <span id="powerCash">0</span></p>
-<button id="claimPower" class="hidden" onclick="claimPower()">Réclamer Power Cash</button>
-</div>
-
-<div class="section">
-<h2>📜 Logs RUB Mining</h2>
-<div class="logPanel" id="logPanel"></div>
-</div>
-
-<script>
-// Initialisation mineurs
-let miners = [
-  {name:'Miner 1', hashRate: Math.random()*50+50}, 
-  {name:'Miner 2', hashRate: Math.random()*50+50}, 
-  {name:'Miner 3', hashRate: Math.random()*50+50}
-];
-
-let data = JSON.parse(localStorage.getItem('rubData')) || {
-  totalRub:0,
-  powerCash:0,
-  verified:false,
-  logs:[]
-};
-
-// Affichage mineurs
-function updateMiners(){
-  let container = document.getElementById('minersContainer');
-  container.innerHTML='';
-  miners.forEach((m)=>{
-    let div = document.createElement('div');
-    div.className='miner';
-    div.innerHTML=`<b>${m.name}</b><br>${m.hashRate.toFixed(2)} GH/s`;
-    container.appendChild(div);
-  });
-}
-
-// Logs
-function addLog(msg){
-  data.logs.push(msg);
-  if(data.logs.length>100) data.logs.shift();
-  let panel = document.getElementById('logPanel');
-  panel.innerHTML = data.logs.join('<br>');
-  panel.scrollTop = panel.scrollHeight;
-  localStorage.setItem('rubData', JSON.stringify(data));
-}
-
-// Mining simulation
-function mineStep(){
-  if(!data.verified) return; // ne mine que si IDTX vérifié
-  miners.forEach((m)=>{
-    let gain = m.hashRate/1000*(Math.random()*0.05+0.05); // gain en RUB
-    data.totalRub += gain;
-    if(Math.random()<0.02) addLog(`[${m.name}] Hash rejeté`);
-    else addLog(`[${m.name}] Hash accepté: +${gain.toFixed(2)} RUB`);
-  });
-  document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
-  if(data.totalRub>=1){
-    document.getElementById('claimPower').classList.remove('hidden');
-    document.getElementById('powerCash').innerText = data.powerCash.toFixed(2);
-  }
-  localStorage.setItem('rubData', JSON.stringify(data));
-}
-
-// Vérification dépôt IDTX
-function verifyDeposit(){
-  let idtx = document.getElementById('idtxInput').value.trim();
-  if(idtx.length>0){
-    data.verified = true;
-    document.getElementById('verifyLog').innerText = "IDTX vérifié. Minage activé !";
-    localStorage.setItem('rubData', JSON.stringify(data));
-  }else{
-    alert("Veuillez saisir un IDTX valide.");
-  }
-}
-
-// Réclamer Power Cash
-function claimPower(){
-  let claim = Math.floor(data.totalRub);
-  data.powerCash += claim;
-  data.totalRub -= claim;
-  document.getElementById('powerCash').innerText = data.powerCash.toFixed(2);
-  document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
-  document.getElementById('claimPower').classList.add('hidden');
-  addLog(`Power Cash réclamé: ${claim}`);
-  localStorage.setItem('rubData', JSON.stringify(data));
-}
-
-// Intervalle mining
-setInterval(mineStep,3000); // toutes les 3 secondes
-updateMiners();
-document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
-document.getElementById('powerCash').innerText = data.powerCash.toFixed(2);
-</script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💰 RUB Mining & Power Cash 💰</title>
-<style>
-body { background:#0d0d0d; color:#eee; font-family:Consolas, monospace; text-align:center; margin:0; padding:0; }
-h1,h2,h3{color:#ffdd33;}
-button { padding:10px 20px; margin:5px; cursor:pointer; background:#222; color:#fff; border:none; border-radius:5px; }
-input { padding:5px; border-radius:3px; border:none; margin:5px; width:200px; }
 .section { border:1px solid #444; padding:15px; margin:10px; border-radius:10px; max-width:800px; margin-left:auto; margin-right:auto; }
 .logPanel { background:#111; height:200px; overflow:auto; padding:5px; border-radius:5px; border:1px solid #444; text-align:left; font-size:12px; }
 .minerStats { display:flex; justify-content:space-around; margin:10px 0; }
-.miner { border:1px solid #444; padding:10px; border-radius:5px; width:140px; }
-#powerCashPage { display:none; }
+.miner { border:1px solid #444; padding:10px; border-radius:5px; width:140px; position:relative; }
+.miner .value { font-weight:bold; color:#33ff33; }
+.accepted { color:#33ff33; }
+.rejected { color:#ff3333; }
 table { width:100%; border-collapse:collapse; margin-top:10px; }
 td,th { border:1px solid #444; padding:5px; text-align:center; }
 </style>
@@ -168,11 +36,11 @@ td,th { border:1px solid #444; padding:5px; text-align:center; }
 <p id="verifyLog"></p>
 </div>
 
-<div class="section" id="miningPage" class="hidden">
+<div class="section" id="miningPage" style="display:none;">
 <h2>⛏️ Minage RUB</h2>
 <div class="minerStats" id="minersContainer"></div>
-<p>Total RUB minés: <span id="totalRub">0</span></p>
-<p>Power Cash disponible: <span id="powerCash">0</span></p>
+<p>Total RUB minés: <span id="totalRub" class="value">0</span></p>
+<p>Power Cash disponible: <span id="powerCash" class="value">0</span></p>
 <button id="claimPower" class="hidden" onclick="claimPower()">Réclamer Power Cash</button>
 <button onclick="showPowerPage()">💎 Page Power Cash</button>
 </div>
@@ -184,7 +52,7 @@ td,th { border:1px solid #444; padding:5px; text-align:center; }
 
 <div class="section" id="powerCashPage">
 <h2>💎 Power Cash</h2>
-<p>Power Cash disponible: <span id="pcBalance">0</span></p>
+<p>Power Cash disponible: <span id="pcBalance" class="value">0</span></p>
 <button onclick="claimPower()">Réclamer Power Cash</button>
 <button onclick="hidePowerPage()">⬅ Retour</button>
 <table>
@@ -198,9 +66,9 @@ td,th { border:1px solid #444; padding:5px; text-align:center; }
 <script>
 // Initialisation mineurs
 let miners = [
-  {name:'Miner 1', hashRate: Math.random()*50+50, hourlyGain:0}, 
-  {name:'Miner 2', hashRate: Math.random()*50+50, hourlyGain:0}, 
-  {name:'Miner 3', hashRate: Math.random()*50+50, hourlyGain:0}
+  {name:'Miner 1', hashRate: Math.random()*50+50, displayedGH:0, hourlyGain:0, displayedGain:0}, 
+  {name:'Miner 2', hashRate: Math.random()*50+50, displayedGH:0, hourlyGain:0, displayedGain:0}, 
+  {name:'Miner 3', hashRate: Math.random()*50+50, displayedGH:0, hourlyGain:0, displayedGain:0}
 ];
 
 let data = JSON.parse(localStorage.getItem('rubData')) || {
@@ -211,23 +79,26 @@ let data = JSON.parse(localStorage.getItem('rubData')) || {
   logs:[]
 };
 
-// Affichage mineurs
+// Affichage mineurs avec chiffres animés
 function updateMiners(){
   let container = document.getElementById('minersContainer');
   container.innerHTML='';
-  miners.forEach((m)=>{
+  miners.forEach(m=>{
+    m.displayedGH += (m.hashRate - m.displayedGH)*0.05;
+    m.displayedGain += (m.hourlyGain - m.displayedGain)*0.05;
     let div = document.createElement('div');
     div.className='miner';
-    div.innerHTML=`<b>${m.name}</b><br>${m.hashRate.toFixed(2)} GH/s<br>Gain/h: ${m.hourlyGain.toFixed(2)} RUB`;
+    div.innerHTML=`<b>${m.name}</b><br><span class="value">${m.displayedGH.toFixed(2)}</span> GH/s<br>Gain/h: <span class="value">${m.displayedGain.toFixed(2)}</span> RUB`;
     container.appendChild(div);
   });
 }
 
-// Logs
-function addLog(msg){
-  data.logs.push(msg);
-  if(data.logs.length>100) data.logs.shift();
+// Logs animés
+function addLog(msg, type='accepted'){
   let panel = document.getElementById('logPanel');
+  let span = `<span class="${type}">${msg}</span>`;
+  data.logs.push(span);
+  if(data.logs.length>100) data.logs.shift();
   panel.innerHTML = data.logs.join('<br>');
   panel.scrollTop = panel.scrollHeight;
   localStorage.setItem('rubData', JSON.stringify(data));
@@ -236,12 +107,12 @@ function addLog(msg){
 // Mining simulation
 function mineStep(){
   if(!data.verified) return;
-  miners.forEach((m)=>{
+  miners.forEach(m=>{
     let gain = m.hashRate/1000*(Math.random()*0.05+0.05);
     data.totalRub += gain;
-    m.hourlyGain = m.hashRate/1000*60; // approximation pour tableau
-    if(Math.random()<0.02) addLog(`[${m.name}] Hash rejeté`);
-    else addLog(`[${m.name}] Hash accepté: +${gain.toFixed(2)} RUB`);
+    m.hourlyGain = m.hashRate/1000*60;
+    if(Math.random()<0.02) addLog(`[${m.name}] Hash rejeté`, 'rejected');
+    else addLog(`[${m.name}] Hash accepté: +${gain.toFixed(2)} RUB`, 'accepted');
   });
   document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
   if(data.totalRub>=1){
@@ -250,7 +121,6 @@ function mineStep(){
   }
   updateMiners();
   updateMinerTable();
-  localStorage.setItem('rubData', JSON.stringify(data));
 }
 
 // Vérification dépôt IDTX
@@ -277,8 +147,8 @@ function claimPower(){
     document.getElementById('powerCash').innerText = data.powerCash.toFixed(2);
     document.getElementById('totalRub').innerText = data.totalRub.toFixed(2);
     document.getElementById('claimPower').classList.add('hidden');
-    localStorage.setItem('rubData', JSON.stringify(data));
     updatePowerPage();
+    localStorage.setItem('rubData', JSON.stringify(data));
   }else{
     alert("Pas assez de RUB pour réclamer Power Cash.");
   }
@@ -304,7 +174,7 @@ function updateMinerTable(){
   tbody.innerHTML='';
   miners.forEach(m=>{
     let tr = document.createElement('tr');
-    tr.innerHTML=`<td>${m.name}</td><td>${m.hashRate.toFixed(2)}</td><td>${m.hourlyGain.toFixed(2)}</td>`;
+    tr.innerHTML=`<td>${m.name}</td><td>${m.displayedGH.toFixed(2)}</td><td>${m.displayedGain.toFixed(2)}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -323,8 +193,9 @@ function applyDailyBonus(){
 }
 
 // Intervalles
-setInterval(mineStep,3000); // mining toutes les 3s
-setInterval(applyDailyBonus,60000); // vérification bonus toutes les minutes
+setInterval(mineStep,3000);
+setInterval(updateMiners,100); // animation chiffres
+setInterval(applyDailyBonus,60000); 
 updateMiners();
 updateMinerTable();
 </script>
