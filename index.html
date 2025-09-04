@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruble Mining & Power Cash</title>
+<style>
+  body { background:#0d0d0d; color:#eee; font-family:Arial, sans-serif; text-align:center; }
+  h1,h2,h3{color:#ffdd33;}
+  button { padding:10px 20px; margin:5px; cursor:pointer; background:#222; color:#fff; border:none; border-radius:5px; }
+  input { padding:5px; border-radius:3px; border:none; margin:5px; }
+  .hidden { display:none; }
+  .section { border:1px solid #444; padding:15px; margin:10px; border-radius:10px; }
+</style>
+</head>
+<body>
+<h1>💰 Ruble Mining & Power Cash 💰</h1>
+
+<div class="section">
+  <h2>💳 Dépôt simulé</h2>
+  <input type="number" id="depositInput" placeholder="Montant RUB" min="1">
+  <button onclick="makeDeposit()">Déposer</button>
+  <p id="depositLog"></p>
+</div>
+
+<div class="section">
+  <h2>⏳ Mining en cours</h2>
+  <p>RUB accumulés: <span id="rubBalance">0</span> RUB</p>
+  <p>Mining horaire: <span id="rubRate">0</span> RUB/h</p>
+</div>
+
+<div class="section">
+  <h2>🪙 Power Cash</h2>
+  <p id="powerCashInfo">Vous n'avez pas encore assez de RUB pour débloquer le Power Cash.</p>
+  <button id="claimPower" class="hidden" onclick="claimPowerCash()">Réclamer Power Cash</button>
+  <p id="powerCashBalance">Power Cash: 0</p>
+</div>
+
+<div class="section">
+  <h2>📢 Liens sponsorisés</h2>
+  <input type="text" id="linkInput" placeholder="Lien à poster">
+  <input type="number" id="linkCost" placeholder="RUB à dépenser" min="1">
+  <button onclick="postLink()">Poster le lien</button>
+  <p id="linkLog"></p>
+  <h3>Vos liens :</h3>
+  <ul id="linksList"></ul>
+</div>
+
+<script>
+// Initialisation
+let data = JSON.parse(localStorage.getItem('rubleData')) || {
+  rubBalance:0,
+  rubRate:0,
+  powerCash:0,
+  powerClaimed:false,
+  links: []
+};
+
+// Mise à jour affichage
+function updateDisplay(){
+  document.getElementById('rubBalance').innerText = data.rubBalance.toFixed(2);
+  document.getElementById('rubRate').innerText = data.rubRate.toFixed(2);
+  document.getElementById('powerCashBalance').innerText = "Power Cash: " + data.powerCash.toFixed(2);
+  if(data.rubBalance>=1){
+    document.getElementById('powerCashInfo').innerText = "Vous pouvez réclamer votre Power Cash !";
+    document.getElementById('claimPower').classList.remove('hidden');
+  }else{
+    document.getElementById('powerCashInfo').innerText = "Vous n'avez pas encore assez de RUB pour débloquer le Power Cash.";
+    document.getElementById('claimPower').classList.add('hidden');
+  }
+  let list = document.getElementById('linksList');
+  list.innerHTML = '';
+  data.links.forEach((l,i)=>{
+    let li = document.createElement('li');
+    li.innerText = l.link + " (Vues restantes: " + l.views + ")";
+    list.appendChild(li);
+  });
+  localStorage.setItem('rubleData', JSON.stringify(data));
+}
+
+// Dépôt simulé
+function makeDeposit(){
+  let dep = parseFloat(document.getElementById('depositInput').value);
+  if(dep && dep>0){
+    data.rubRate += dep/1000; // 1000 RUB = 1 RUB/h
+    data.rubBalance += dep/1000; // Simule gain immédiat pour test
+    document.getElementById('depositLog').innerText = "Dépôt simulé: " + dep + " RUB.";
+    updateDisplay();
+  }
+}
+
+// Mining automatique toutes les minutes
+setInterval(()=>{
+  data.rubBalance += data.rubRate/60; // par minute
+  updateDisplay();
+},60000);
+
+// Réclamer Power Cash
+function claimPowerCash(){
+  let cash = Math.floor(data.rubBalance);
+  if(cash>=1){
+    data.powerCash += cash;
+    data.rubBalance -= cash;
+    updateDisplay();
+  }else{
+    alert("Vous n'avez pas assez de RUB à convertir en Power Cash.");
+  }
+}
+
+// Poster un lien sponsorisé
+function postLink(){
+  let link = document.getElementById('linkInput').value;
+  let cost = parseFloat(document.getElementById('linkCost').value);
+  if(link && cost>0 && data.rubBalance>=cost){
+    let views = Math.floor(cost*3.5); // 100 RUB = 350 vues
+    data.rubBalance -= cost;
+    data.links.push({link:link, views:views});
+    document.getElementById('linkLog').innerText = "Lien posté pour " + cost + " RUB ("+views+" vues).";
+    document.getElementById('linkInput').value = '';
+    document.getElementById('linkCost').value = '';
+    updateDisplay();
+  }else{
+    alert("RUB insuffisant pour poster ce lien ou informations manquantes.");
+  }
+}
+
+updateDisplay();
+</script>
+</body>
+</html>
